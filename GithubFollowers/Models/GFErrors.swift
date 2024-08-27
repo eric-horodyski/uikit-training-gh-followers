@@ -1,5 +1,5 @@
 //
-//  ErrorMessages.swift
+//  GFErrors.swift
 //  GithubFollowers
 //
 //  Created by Eric Horodyski on 8/16/24.

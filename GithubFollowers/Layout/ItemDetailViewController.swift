@@ -13,12 +13,27 @@ class ItemDetailViewController: UIViewController {
 	let itemDetailViewTwo = GFItemDetailView()
 	let actionButton = GFButton()
 	
+	var user: User!
+	weak var delegate: UserDetailViewControllerDelegate!
+	
+	init(user: User) {
+		super.init(nibName: nil, bundle: nil)
+		self.user = user
+	}
+	
+	required init?(coder: NSCoder) {
+		fatalError("init(coder:) has not been implemented")
+	}
+	
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		configureBackgroundView()
 		configureUI()
 		configureStackView()
+		configureActionButton()
 	}
+	
+	@objc func actionButtonTapped() {}
 	
 	private func configureBackgroundView() {
 		view.layer.cornerRadius = 18
@@ -30,6 +45,10 @@ class ItemDetailViewController: UIViewController {
 		stackView.distribution = .equalSpacing
 		stackView.addArrangedSubview(itemDetailViewOne)
 		stackView.addArrangedSubview(itemDetailViewTwo)
+	}
+	
+	private func configureActionButton() {
+		actionButton.addTarget(self, action: #selector(actionButtonTapped), for: .touchUpInside)
 	}
 	
 	private func configureUI() {
