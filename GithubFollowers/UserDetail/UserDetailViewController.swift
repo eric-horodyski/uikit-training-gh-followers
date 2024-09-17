@@ -8,11 +8,10 @@
 import UIKit
 
 protocol UserDetailViewControllerDelegate: AnyObject {
-	func didTapGithubProfile(for user: User)
-	func didTapGetFollowers(for user: User)
+	func didRequestFollowers(for username: String)
 }
 
-class UserDetailViewController: UIViewController {
+class UserDetailViewController: GFDataLoadingViewController {
 	let headerView = UIView()
 	let itemViewOne = UIView()
 	let itemViewTwo = UIView()
@@ -20,7 +19,7 @@ class UserDetailViewController: UIViewController {
 	
 	var childViews: [UIView] = []
 	var username: String!
-	weak var delegate: FollowerListViewControllerDelegate!
+	weak var delegate: UserDetailViewControllerDelegate!
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -36,16 +35,16 @@ class UserDetailViewController: UIViewController {
 	}
 	
 	private func getUserDetail() {
-		NetworkManager.shared.getUserDetail(for: username) { [weak self] result in
-			guard let self = self else { return }
-			
-			switch result {
-			case .success(let user):
-				DispatchQueue.main.async {
-					self.configureUIElements(with: user)
+		Task {
+			do {
+				let user = try await NetworkManager.shared.getUserDetail(for: username)
+				configureUIElements(with: user)
+			} catch {
+				if let error = error as? GFError {
+					presentGFAlert(title: "Something went wrong", message: error.rawValue, buttonTitle: "OK")
+				} else {
+					presentDefaultError()
 				}
-			case .failure(let error):
-				self.presentGFAlertOnMainThread(title: "Something went wrong", message: error.rawValue, buttonTitle: "OK")
 			}
 		}
 	}
@@ -62,15 +61,10 @@ class UserDetailViewController: UIViewController {
 	}
 	
 	private func configureUIElements(with user: User) {
-		let repoDetailViewController = RepoDetailViewController(user: user)
-		let followerDetailViewController = FollowerDetailViewController(user: user)
-		repoDetailViewController.delegate = self
-		followerDetailViewController.delegate = self
-		
 		self.addChildView(childView: UserDetailHeaderViewController(user: user), to: self.headerView)
-		self.addChildView(childView: repoDetailViewController, to: self.itemViewOne)
-		self.addChildView(childView: followerDetailViewController, to: self.itemViewTwo)
-		self.dateLabel.text = "GitHub since \(user.createdAt.convertToDisplayFormat())"
+		self.addChildView(childView: RepoDetailViewController(user: user, delegate: self), to: self.itemViewOne)
+		self.addChildView(childView: FollowerDetailViewController(user: user, delegate: self), to: self.itemViewTwo)
+		self.dateLabel.text = "GitHub since \(user.createdAt.convertToMonthYearFormat())"
 	}
 	
 	private func layoutUI() {
@@ -102,19 +96,25 @@ class UserDetailViewController: UIViewController {
 	}
 }
 
-extension UserDetailViewController: UserDetailViewControllerDelegate {
+extension UserDetailViewController: RepoDetailViewControllerDelegate {
 	func didTapGithubProfile(for user: User) {
 		guard let url = URL(string: user.htmlUrl) else {
-			presentGFAlertOnMainThread(title: "Invalid URL", message: "The URL attached to this user is invalid.", buttonTitle: "OK")
+			DispatchQueue.main.async {
+				self.presentGFAlert(title: "Invalid URL", message: "The URL attached to this user is invalid.", buttonTitle: "OK")
+			}
 			return
 		}
 		
 		presentSafariViewController(with: url)
 	}
-	
+}
+
+extension UserDetailViewController: FollowerDetailViewControllerDelegate {
 	func didTapGetFollowers(for user: User) {
 		guard user.followers != 0 else {
-			presentGFAlertOnMainThread(title: "No Followers", message: "This user has no followers.", buttonTitle: "OK")
+			DispatchQueue.main.async {
+				self.presentGFAlert(title: "No Followers", message: "This user has no followers.", buttonTitle: "OK")
+			}
 			return
 		}
 		

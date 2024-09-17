@@ -7,7 +7,7 @@
 
 import UIKit
 
-struct FlowLayoutFactory {
+enum FlowLayoutFactory {
 	
 	static func createThreeColumnFlowLayout(in view: UIView) -> UICollectionViewFlowLayout {
 		let width = view.bounds.width

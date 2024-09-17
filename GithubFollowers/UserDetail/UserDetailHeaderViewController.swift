@@ -29,13 +29,12 @@ class UserDetailHeaderViewController: UIViewController {
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		addSubViews()
+		view.addSubviews(avatarImageView, usernameLabel, nameLabel, locationImageView, locationLabel, bioLabel)
 		layoutUI()
 		configureUIElements()
 	}
 	
 	private func configureUIElements() {
-		avatarImageView.downloadImage(from: user.avatarUrl)
 		usernameLabel.text = user.login
 		nameLabel.text = user.name ?? ""
 		locationLabel.text = user.location ?? ""
@@ -45,15 +44,7 @@ class UserDetailHeaderViewController: UIViewController {
 		locationImageView.image = UIImage(systemName: "mappin.and.ellipse")
 		locationImageView.tintColor = .secondaryLabel
 		
-	}
-	
-	private func addSubViews() {
-		view.addSubview(avatarImageView)
-		view.addSubview(usernameLabel)
-		view.addSubview(nameLabel)
-		view.addSubview(locationImageView)
-		view.addSubview(locationLabel)
-		view.addSubview(bioLabel)
+		avatarImageView.downloadImage(from: user.avatarUrl)
 	}
 	
 	private func layoutUI() {

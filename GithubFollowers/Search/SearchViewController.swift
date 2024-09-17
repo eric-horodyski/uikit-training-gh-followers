@@ -11,7 +11,7 @@ class SearchViewController: UIViewController {
 
 	let logoImageView = UIImageView()
 	let usernameTextField = GFTextField()
-	let callToActionButton = GFButton(backgroundColor: .systemGreen, title: "Get Followers")
+	let callToActionButton = GFButton(color: .systemGreen, title: "Get Followers", systemImageName: "person.3")
 	
 	var isUsernameEntered: Bool { return !usernameTextField.text!.isEmpty }
 	
@@ -27,22 +27,25 @@ class SearchViewController: UIViewController {
 	override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
 		navigationController?.setNavigationBarHidden(true, animated: true)
+		usernameTextField.text = ""
 	}
 	
 	@objc func pushFollowerList() {
 		guard isUsernameEntered else {
-			presentGFAlertOnMainThread(title: "Empty Username", message: "Please enter a username. We need to know who to look for. 😀", buttonTitle: "OK")
+			DispatchQueue.main.async {
+				self.presentGFAlert(title: "Empty Username", message: "Please enter a username. We need to know who to look for. 😀", buttonTitle: "OK")
+			}
 			return
 		}
 		
-		let followerListViewController = FollowerListViewController()
-		followerListViewController.username = usernameTextField.text
-		followerListViewController.title = usernameTextField.text
+		usernameTextField.resignFirstResponder()
+		
+		let followerListViewController = FollowerListViewController(username: usernameTextField.text!)
 		navigationController?.pushViewController(followerListViewController, animated: true)
 	}
 	
 	private func createDismissKeyboardTapGesture() {
-		let tap = UITapGestureRecognizer(target: self.view, action: #selector(UIView.endEditing))
+		let tap = UITapGestureRecognizer(target: view, action: #selector(UIView.endEditing))
 		view.addGestureRecognizer(tap)
 	}
 	
@@ -50,9 +53,10 @@ class SearchViewController: UIViewController {
 		view.addSubview(logoImageView)
 		logoImageView.translatesAutoresizingMaskIntoConstraints = false
 		logoImageView.image = UIImage(resource: .ghLogo)
-		
+
+		let topConstraint: CGFloat = DeviceTypes.isiPhoneSE || DeviceTypes.isiPhone8Zoomed ? 20 : 80
 		NSLayoutConstraint.activate([
-			logoImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80),
+			logoImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: topConstraint),
 			logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 			logoImageView.heightAnchor.constraint(equalToConstant: 200),
 			logoImageView.widthAnchor.constraint(equalToConstant: 200)
@@ -91,4 +95,8 @@ extension SearchViewController: UITextFieldDelegate {
 		pushFollowerList()
 		return true
 	}
+}
+
+#Preview {
+	SearchViewController()
 }
